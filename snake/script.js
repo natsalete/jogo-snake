@@ -9,14 +9,21 @@ $(document).ready(function() {
     let proximaDirecao = 'direita';
     let pontos = 0;
     let highScore = localStorage.getItem('snakeHighScore') || 0;
-    let loopJogo;
+    let loopJogo = null;
     let jogoPausado = false;
     let jogoEncerrado = false;
+    let audioContext = null;
     
-    // Áudio
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    // Inicializa o contexto de áudio
+    function inicializarAudio() {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
     
     function playSound(frequency, type = 'sine', duration = 0.1) {
+        if (!audioContext) {
+            inicializarAudio();
+        }
+        
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
         
@@ -33,6 +40,12 @@ $(document).ready(function() {
         oscillator.stop(audioContext.currentTime + duration);
     }
     
+    // Limpa o tabuleiro completamente
+    function limparTabuleiro() {
+        $('#tabuleiro').empty();
+        criarGrade();
+    }
+    
     // Cria grade de fundo
     function criarGrade() {
         for (let x = 0; x < TAMANHO_GRADE; x++) {
@@ -44,6 +57,15 @@ $(document).ready(function() {
                 $('#tabuleiro').append($cell);
             }
         }
+    }
+    
+    function resetarEstadoJogo() {
+        cobra = [];
+        direcao = 'direita';
+        proximaDirecao = 'direita';
+        pontos = 0;
+        jogoPausado = false;
+        jogoEncerrado = false;
     }
     
     function inicializarCobra() {
@@ -144,14 +166,43 @@ $(document).ready(function() {
     }
     
     function fimDeJogo() {
-        clearInterval(loopJogo);
+        if (loopJogo) {
+            clearInterval(loopJogo);
+            loopJogo = null;
+        }
         jogoEncerrado = true;
         $('.fim-de-jogo').show();
         playSound(220, 'sawtooth', 0.3); // Som de fim de jogo
     }
     
+    function iniciarNovoJogo() {
+        if (loopJogo) {
+            clearInterval(loopJogo);
+            loopJogo = null;
+        }
+        
+        resetarEstadoJogo();
+        limparTabuleiro();
+        inicializarCobra();
+        gerarComida();
+        desenhar();
+        
+        $('#pontuacao span').text('0');
+        $('#high-score span').text(highScore);
+        $('.fim-de-jogo').hide();
+        $('#botao-pausar').text('Pausar');
+        
+        loopJogo = setInterval(function() {
+            if (!jogoPausado && !jogoEncerrado) {
+                atualizar();
+                desenhar();
+            }
+        }, 100);
+    }
+    
+    // Event Listeners
     $(document).on('keydown', function(e) {
-        if (!jogoPausado) {
+        if (!jogoPausado && !jogoEncerrado) {
             switch (e.key) {
                 case 'ArrowUp':
                     if (direcao !== 'baixo') proximaDirecao = 'cima';
@@ -170,24 +221,13 @@ $(document).ready(function() {
     });
     
     $('#botao-iniciar').on('click', function() {
-        audioContext.resume();
-        clearInterval(loopJogo);
-        jogoEncerrado = false;
-        jogoPausado = false;
-        pontos = 0;
-        $('#pontuacao span').text(pontos);
-        $('#high-score span').text(highScore);
-        $('.fim-de-jogo').hide();
-        $('#botao-pausar').text('Pausar');
-        inicializarCobra();
-        gerarComida();
-        playSound(440, 'square', 0.1); // Som de início
-        loopJogo = setInterval(function() {
-            if (!jogoPausado) {
-                atualizar();
-                desenhar();
-            }
-        }, 100);
+        if (!audioContext) {
+            inicializarAudio();
+        }
+        audioContext.resume().then(() => {
+            playSound(440, 'square', 0.1); // Som de início
+            iniciarNovoJogo();
+        });
     });
     
     $('#botao-pausar').on('click', function() {
@@ -199,7 +239,7 @@ $(document).ready(function() {
     });
     
     // Inicialização
-    criarGrade();
+    limparTabuleiro();
     inicializarCobra();
     gerarComida();
     desenhar();
