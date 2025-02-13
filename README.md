@@ -1,6 +1,8 @@
 # 🐍 Jogo da Cobrinha (Snake Game)  
 
-Este repositório contém a implementação do clássico **Jogo da Cobrinha (Snake Game)**, desenvolvido com **HTML**, **CSS**, **JavaScript**, **jQuery** e a **Web Audio API** para efeitos sonoros.  
+Este repositório contém a implementação do clássico **Jogo da Cobrinha (Snake Game)**, desenvolvido com **HTML**, **CSS**, **JavaScript**, **jQuery** e a **Web Audio API** para efeitos sonoros.
+
+Deploy: natalia-jogo-snake.vercel.app/
 
 ## 🎮 Sobre o Jogo  
 O objetivo do jogo é controlar a cobrinha para coletar comida, fazendo-a crescer a cada ponto. O jogo termina quando a cobrinha colide com as paredes ou com ela mesma.  
